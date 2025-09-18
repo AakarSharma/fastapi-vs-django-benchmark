@@ -27,8 +27,8 @@ async def startup_event():
                         "user": "benchmark_user",
                         "password": "benchmark_pass",
                         "database": "benchmark_fastapi",
-                        "minsize": 20,
-                        "maxsize": 100,
+                        "minsize": 100,
+                        "maxsize": 10000,
                         "charset": "utf8mb4",
                     }
                 }

@@ -5,7 +5,7 @@ services:
       MYSQL_ROOT_PASSWORD: rootpass
     command: >
       mysqld
-      --max_connections=5000
+      --max_connections=10000
       --table_open_cache=2000
       --performance_schema=ON
       --innodb_buffer_pool_size=256M
@@ -19,8 +19,8 @@ services:
       - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
     ports:
       - "3306:3306"
-    cpus: 1.0
-    mem_limit: 1g
+    cpus: 8.0
+    mem_limit: 8g
     restart: unless-stopped
 
   fastapi:

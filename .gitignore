@@ -6,7 +6,6 @@ __pycache__/
 *.pyd
 *.sqlite3
 *.db
-results/
 benchmarks/__pycache__/
 **/.pytest_cache/
 **/.mypy_cache/

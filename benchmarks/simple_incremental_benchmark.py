@@ -118,7 +118,7 @@ class SimpleIncrementalBenchmark:
                             response.status,
                             False,
                             {
-                                "when": datetime.utcnow().isoformat() + "Z",
+                                "when": datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z"),
                                 "endpoint": endpoint,
                                 "method": method,
                                 "status_code": response.status,
@@ -136,7 +136,7 @@ class SimpleIncrementalBenchmark:
                 500,
                 False,
                 {
-                    "when": datetime.utcnow().isoformat() + "Z",
+                    "when": datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z"),
                     "endpoint": endpoint,
                     "method": method,
                     "status_code": 500,
