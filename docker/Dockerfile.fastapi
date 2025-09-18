@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y gcc default-libmysqlclient-dev build-essential && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/fastapi_requirements.txt .
 RUN pip install --no-cache-dir -r fastapi_requirements.txt
@@ -13,4 +13,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--loop", "uvloop", "--http", "httptools", "--timeout-keep-alive", "60", "--limit-concurrency", "2000", "--backlog", "2048", "--limit-max-requests", "10000"]
+CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "--bind", "0.0.0.0:8000", "--timeout", "300", "--max-requests", "10000", "--max-requests-jitter", "1000", "--worker-connections", "2000", "--keep-alive", "60", "--backlog", "2048", "--preload"]

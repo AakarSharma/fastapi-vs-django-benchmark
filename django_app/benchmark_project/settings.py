@@ -50,13 +50,17 @@ WSGI_APPLICATION = 'benchmark_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'benchmark_db',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'benchmark_django',
         'USER': 'benchmark_user',
         'PASSWORD': 'benchmark_pass',
-        'HOST': 'postgres',
-        'PORT': '5432',
+        'HOST': 'mysql',
+        'PORT': '3306',
         'CONN_MAX_AGE': 60,
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 

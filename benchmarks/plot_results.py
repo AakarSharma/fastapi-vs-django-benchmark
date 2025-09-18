@@ -47,4 +47,43 @@ errors_png = OUT_DIR / 'error_rate_vs_concurrency.png'
 plt.savefig(errors_png, bbox_inches='tight')
 plt.close()
 
-print(f'Wrote {throughput_png} and {errors_png}')
+# CPU usage plot
+plt.figure(figsize=(8,5))
+plt.plot(x_f, [r['avg_cpu_percent'] for r in fas], marker='o', label='FastAPI')
+plt.plot(x_d, [r['avg_cpu_percent'] for r in djs], marker='o', label='Django')
+plt.title('CPU Usage vs Concurrency')
+plt.xlabel('Concurrent Users')
+plt.ylabel('Average CPU Usage (%)')
+plt.grid(True, alpha=0.3)
+plt.legend()
+cpu_png = OUT_DIR / 'cpu_usage_vs_concurrency.png'
+plt.savefig(cpu_png, bbox_inches='tight')
+plt.close()
+
+# Duration plot
+plt.figure(figsize=(8,5))
+plt.plot(x_f, [r['duration'] for r in fas], marker='o', label='FastAPI')
+plt.plot(x_d, [r['duration'] for r in djs], marker='o', label='Django')
+plt.title('Test Duration vs Concurrency')
+plt.xlabel('Concurrent Users')
+plt.ylabel('Duration (seconds)')
+plt.grid(True, alpha=0.3)
+plt.legend()
+duration_png = OUT_DIR / 'duration_vs_concurrency.png'
+plt.savefig(duration_png, bbox_inches='tight')
+plt.close()
+
+# Total requests plot
+plt.figure(figsize=(8,5))
+plt.plot(x_f, [r['total_requests'] for r in fas], marker='o', label='FastAPI')
+plt.plot(x_d, [r['total_requests'] for r in djs], marker='o', label='Django')
+plt.title('Total Requests vs Concurrency')
+plt.xlabel('Concurrent Users')
+plt.ylabel('Total Requests')
+plt.grid(True, alpha=0.3)
+plt.legend()
+requests_png = OUT_DIR / 'total_requests_vs_concurrency.png'
+plt.savefig(requests_png, bbox_inches='tight')
+plt.close()
+
+print(f'Wrote {throughput_png}, {errors_png}, {cpu_png}, {duration_png}, and {requests_png}')

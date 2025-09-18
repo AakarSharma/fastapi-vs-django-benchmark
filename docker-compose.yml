@@ -1,24 +1,24 @@
 services:
-  postgres:
-    image: postgres:15-alpine
+  mysql:
+    image: mysql:8.4
     environment:
-      POSTGRES_DB: benchmark_db
-      POSTGRES_USER: benchmark_user
-      POSTGRES_PASSWORD: benchmark_pass
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      MYSQL_ROOT_PASSWORD: rootpass
     command: >
-      postgres
-      -c max_connections=500
-      -c shared_buffers=256MB
-      -c effective_cache_size=1GB
-      -c maintenance_work_mem=64MB
-      -c checkpoint_completion_target=0.9
-      -c wal_buffers=16MB
-      -c default_statistics_target=100
+      mysqld
+      --max_connections=5000
+      --table_open_cache=2000
+      --performance_schema=ON
+      --innodb_buffer_pool_size=256M
+      --innodb_log_file_size=64M
+      --innodb_flush_method=O_DIRECT
+      --innodb_flush_log_at_trx_commit=1
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5432:5432"
+      - "3306:3306"
     cpus: 1.0
     mem_limit: 1g
     restart: unless-stopped
@@ -28,15 +28,16 @@ services:
       context: .
       dockerfile: docker/Dockerfile.fastapi
     ports:
-      - "8000:8000"
+      - "18000:8000"
     volumes:
       - ./fastapi_app:/app
       - fastapi_data:/app/data
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgres://benchmark_user:benchmark_pass@postgres:5432/benchmark_db
+      - DATABASE_URL=mysql://benchmark_user:benchmark_pass@mysql:3306/benchmark_fastapi
+      - AERICH_DB=mysql://benchmark_user:benchmark_pass@mysql:3306/benchmark_fastapi
     depends_on:
-      - postgres
+      - mysql
     cpus: 1.0
     mem_limit: 2g
     restart: unless-stopped
@@ -46,20 +47,20 @@ services:
       context: .
       dockerfile: docker/Dockerfile.django
     ports:
-      - "8001:8001"
+      - "18001:8001"
     volumes:
       - ./django_app:/app
       - django_data:/app/data
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgres://benchmark_user:benchmark_pass@postgres:5432/benchmark_db
+      - DATABASE_URL=mysql://benchmark_user:benchmark_pass@mysql:3306/benchmark_django
     depends_on:
-      - postgres
+      - mysql
     cpus: 1.0
     mem_limit: 2g
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  mysql_data:
   fastapi_data:
   django_data:

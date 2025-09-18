@@ -20,16 +20,16 @@ async def startup_event():
         config={
             "connections": {
                 "default": {
-                    "engine": "tortoise.backends.asyncpg",
+                    "engine": "tortoise.backends.mysql",
                     "credentials": {
-                        "host": "postgres",
-                        "port": "5432",
+                        "host": "mysql",
+                        "port": "3306",
                         "user": "benchmark_user",
                         "password": "benchmark_pass",
-                        "database": "benchmark_db",
+                        "database": "benchmark_fastapi",
                         "minsize": 20,
                         "maxsize": 100,
-                        "command_timeout": 60,
+                        "charset": "utf8mb4",
                     }
                 }
             },
@@ -41,7 +41,6 @@ async def startup_event():
             }
         }
     )
-    await Tortoise.generate_schemas()
 
 @app.on_event("shutdown")
 async def shutdown_event():

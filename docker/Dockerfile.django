@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y gcc default-libmysqlclient-dev build-essential pkg-config && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/django_requirements.txt .
 RUN pip install --no-cache-dir -r django_requirements.txt

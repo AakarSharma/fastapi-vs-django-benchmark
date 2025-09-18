@@ -1,7 +1,7 @@
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
-tortoise-orm[asyncpg]==0.20.0
-asyncpg==0.29.0
+tortoise-orm[aiomysql]==0.20.0
+aiomysql==0.2.0
 pydantic==2.10.4
 httpx==0.28.1
 pytest==8.3.4
@@ -9,3 +9,4 @@ pytest-asyncio==0.24.0
 gunicorn==23.0.0
 aiofiles==24.1.0
 uvloop==0.21.0
+Aerich==0.7.2

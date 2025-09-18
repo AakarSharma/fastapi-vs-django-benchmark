@@ -1,6 +1,6 @@
 # FastAPI vs Django Performance Benchmark (Reproducible)
 
-This repository compares FastAPI and Django under identical, I/O‑intensive workloads with equalized resources. It is designed for one‑command setup, reproducible runs, and a single consolidated report with plots.
+This repository compares an async FastAPI stack and a sync Django stack under the same I/O‑intensive workload with equalized resources. It is designed for one‑command setup, reproducible runs, and a single consolidated report with plots.
 
 ## What This Contains
 - Two apps exposing identical endpoints and doing the same work:
@@ -8,8 +8,8 @@ This repository compares FastAPI and Django under identical, I/O‑intensive wor
   - Django (+ Django ORM, psycopg2)
 - PostgreSQL in Docker shared by both
 - Identical I/O workload per request:
-  - 5× file I/O (JSON write/read to per‑request unique temp file)
-  - 3× database I/O (create 10, update 5, delete 5) in a single DB transaction
+  - 2× file I/O (JSON write/read to per‑request unique temp file)
+  - 8× database I/O (create 10, update 5, delete 5) in a single DB transaction
   - Unique emails under high concurrency to avoid collisions
 - Equalized resources: 1 vCPU, 2 GB RAM per service
 - Incremental benchmark script and plot generation
@@ -25,7 +25,7 @@ Configured in `docker-compose.yml` and Dockerfiles:
 - Memory: 2 GB per service (`mem_limit: 2g`)
 - Database: PostgreSQL 15 (tuned via Compose)
 - FastAPI server: Uvicorn with `--workers 1`, `--loop uvloop`, `--http httptools`
-- Django server: Gunicorn with `-w 1 --threads 4`
+- Django server: Gunicorn WSGI with `-w 1 --threads 8`
 
 ## Project Structure
 ```
@@ -56,7 +56,7 @@ Outputs:
 ## 2) Manual Run (Optional)
 Start services:
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 Migrate Django:
 ```bash
@@ -75,6 +75,7 @@ python benchmarks/plot_results.py results/incremental_benchmark_results.json
 ```
 
 ## Methodology (Fairness & Parity)
+- Intentional comparison: FastAPI async (ASGI, aiofiles, async ORM) vs Django sync (WSGI + DRF, sync ORM).
 - Same endpoints and same work in both apps (CRUD + file I/O) per request to `/io-intensive`.
 - Per‑request unique temp file to avoid collisions.
 - DB operations wrapped in a single transaction for both frameworks.
@@ -84,7 +85,7 @@ python benchmarks/plot_results.py results/incremental_benchmark_results.json
 ## Troubleshooting
 - Django `/io-intensive` path is `/api/benchmark/io_intensive/` (underscore).
 - If DB connection errors appear, consider raising Postgres `max_connections` in Compose or reducing threads.
-- Tail latencies near ~60s indicate saturation and client timeouts; reduce per‑request work or scale resources.
+- Tail latencies near ~300s indicate saturation and client timeouts; reduce per‑request work or scale resources.
 
 ## License
 MIT

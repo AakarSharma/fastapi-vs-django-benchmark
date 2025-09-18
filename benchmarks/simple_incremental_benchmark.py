@@ -15,6 +15,7 @@ import traceback
 from datetime import datetime
 import asyncio.subprocess as asp
 import re
+import random
 
 class SimpleIncrementalBenchmark:
     def __init__(self, fastapi_url: str, django_url: str):
@@ -86,7 +87,7 @@ class SimpleIncrementalBenchmark:
         start_time = time.time()
         try:
             if method == "POST":
-                async with session.post(f"{url}{endpoint}", json=data, timeout=60) as response:
+                async with session.post(f"{url}{endpoint}", json=data, timeout=300) as response:
                     body = await response.text()
                     success = response.status == 200
                     if not success:
@@ -103,12 +104,12 @@ class SimpleIncrementalBenchmark:
                                 "error_type": "HTTP_NON_200",
                                 "error_message": f"Non-200 response ({response.status})",
                                 "worker_id": worker_id,
-                                "client_timeout_s": 60,
+                                "client_timeout_s": 300,
                             },
                         )
                     return time.time() - start_time, response.status, True, None
             else:
-                async with session.get(f"{url}{endpoint}", timeout=60) as response:
+                async with session.get(f"{url}{endpoint}", timeout=300) as response:
                     body = await response.text()
                     success = response.status == 200
                     if not success:
@@ -125,7 +126,7 @@ class SimpleIncrementalBenchmark:
                                 "error_type": "HTTP_NON_200",
                                 "error_message": f"Non-200 response ({response.status})",
                                 "worker_id": worker_id,
-                                "client_timeout_s": 60,
+                                "client_timeout_s": 300,
                             },
                         )
                     return time.time() - start_time, response.status, True, None
@@ -281,8 +282,17 @@ class SimpleIncrementalBenchmark:
         
         end_time = time.time() + duration
         
+        # Initial stagger to avoid synchronized start bursts across workers
+        try:
+            initial_delay = random.uniform(0.0, min(1.0, duration * 0.1))
+            if initial_delay > 0:
+                await asyncio.sleep(initial_delay)
+        except Exception:
+            pass
+        
         while time.time() < end_time:
-            for endpoint, method, data in endpoints:
+            # Shuffle endpoint order each cycle to avoid phase alignment
+            for endpoint, method, data in random.sample(endpoints, k=len(endpoints)):
                 response_time, status_code, success, err = await self.test_endpoint(session, url, endpoint, method, data, worker_id)
                 response_times.append(response_time)
                 status_codes.append(status_code)
@@ -293,7 +303,11 @@ class SimpleIncrementalBenchmark:
                     if err:
                         error_details.append(err)
                 
-                await asyncio.sleep(0.001)
+                # Small jitter between requests to prevent synchronized pacing
+                try:
+                    await asyncio.sleep(random.uniform(0.001, 0.01))
+                except Exception:
+                    pass
         
         return {
             'response_times': response_times,
