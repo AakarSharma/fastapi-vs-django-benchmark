@@ -18,9 +18,10 @@ import re
 import random
 
 class SimpleIncrementalBenchmark:
-    def __init__(self, fastapi_url: str, django_url: str):
+    def __init__(self, fastapi_url: str, django_url: str, django_asgi_url: str):
         self.fastapi_url = fastapi_url
         self.django_url = django_url
+        self.django_asgi_url = django_asgi_url
         self.results = []
         # Container identifiers will be resolved dynamically via `docker compose ps -q`
 
@@ -152,19 +153,37 @@ class SimpleIncrementalBenchmark:
         """Run load test for a specific framework"""
         print(f"Starting {framework} load test for {duration} seconds with {concurrent} concurrent users...")
         
-        endpoints = [
-            ("/api/benchmark/io_intensive/", "POST", {}) if framework == "django" else ("/io-intensive", "POST", {}),
-            ("/api/users/", "GET", None) if framework == "django" else ("/users", "GET", None),
-            ("/api/products/", "GET", None) if framework == "django" else ("/products", "GET", None),
-            ("/api/orders/", "GET", None) if framework == "django" else ("/orders", "GET", None),
-        ]
+        if framework == "django":
+            endpoints = [
+                ("/api/benchmark/io_intensive/", "POST", {}),
+                ("/api/users/", "GET", None),
+                ("/api/products/", "GET", None),
+                ("/api/orders/", "GET", None),
+            ]
+        elif framework == "django-asgi":
+            endpoints = [
+                ("/api/benchmark/io_intensive/", "POST", {}),
+                ("/api/users/", "GET", None),
+                ("/api/products/", "GET", None),
+                ("/api/orders/", "GET", None),
+            ]
+        else:  # fastapi
+            endpoints = [
+                ("/io-intensive", "POST", {}),
+                ("/users", "GET", None),
+                ("/products", "GET", None),
+                ("/orders", "GET", None),
+            ]
         
         connector = aiohttp.TCPConnector(limit=2000, limit_per_host=1000, keepalive_timeout=30)
         timeout = aiohttp.ClientTimeout(total=60)
         
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             # Health check first
-            health_endpoint = "/api/benchmark/health/" if framework == "django" else "/health"
+            if framework == "django" or framework == "django-asgi":
+                health_endpoint = "/api/benchmark/health/"
+            else:  # fastapi
+                health_endpoint = "/health"
             try:
                 async with session.get(f"{url}{health_endpoint}", timeout=10) as response:
                     if response.status != 200:
@@ -332,20 +351,30 @@ class SimpleIncrementalBenchmark:
             if fastapi_result:
                 self.results.append(fastapi_result)
             
-            print("Waiting 10 seconds before testing Django...")
+            print("Waiting 10 seconds before testing Django WSGI...")
             await asyncio.sleep(10)
             
-            # Test Django
+            # Test Django WSGI
             django_result = await self.run_load_test(self.django_url, "django", duration, concurrent)
             if django_result:
                 self.results.append(django_result)
+            
+            print("Waiting 10 seconds before testing Django ASGI...")
+            await asyncio.sleep(10)
+            
+            # Test Django ASGI
+            django_asgi_result = await self.run_load_test(self.django_asgi_url, "django-asgi", duration, concurrent)
+            if django_asgi_result:
+                self.results.append(django_asgi_result)
             
             print("Waiting 15 seconds before next test...")
             await asyncio.sleep(15)
             
             # Check if we should stop due to high error rates
-            if fastapi_result and django_result:
-                if fastapi_result["error_rate"] > 50 or django_result["error_rate"] > 50:
+            if fastapi_result and django_result and django_asgi_result:
+                if (fastapi_result["error_rate"] > 50 or 
+                    django_result["error_rate"] > 50 or 
+                    django_asgi_result["error_rate"] > 50):
                     print(f"Stopping benchmark due to high error rates at {concurrent} concurrent users")
                     break
 
@@ -363,31 +392,43 @@ class SimpleIncrementalBenchmark:
         
         fastapi_results = [r for r in self.results if r["framework"] == "fastapi"]
         django_results = [r for r in self.results if r["framework"] == "django"]
+        django_asgi_results = [r for r in self.results if r["framework"] == "django-asgi"]
         
-        report = f"""# Incremental Benchmark Report: FastAPI vs Django
+        report = f"""# Incremental Benchmark Report: FastAPI vs Django WSGI vs Django ASGI
 
 ## Test Configuration
 - **Test Duration**: 30 seconds per concurrency level
 - **Concurrency Range**: 50 to {max([r['concurrent_users'] for r in self.results])} users
 - **Step Size**: 50 users
-- **Total Tests**: {len(self.results) // 2} concurrency levels
+- **Total Tests**: {len(self.results) // 3} concurrency levels
 
 ## Summary Results
 
-| Concurrency | FAPI Thr (RPS) | DJ Thr (RPS) | FAPI Err % | DJ Err % | Winner |
-|-------------|----------------|--------------|------------|----------|--------|
+| Concurrency | FAPI Thr (RPS) | DJ WSGI Thr (RPS) | DJ ASGI Thr (RPS) | FAPI Err % | DJ WSGI Err % | DJ ASGI Err % | Winner |
+|-------------|----------------|-------------------|-------------------|------------|---------------|---------------|--------|
 """
         
-        for i in range(0, len(self.results), 2):
-            if i + 1 < len(self.results):
+        for i in range(0, len(self.results), 3):
+            if i + 2 < len(self.results):
                 fastapi = self.results[i]
                 django = self.results[i + 1]
+                django_asgi = self.results[i + 2]
                 
-                winner = "FastAPI" if fastapi["throughput"] > django["throughput"] else "Django"
-                if fastapi["error_rate"] > 10 or django["error_rate"] > 10:
+                # Determine winner based on throughput and error rates
+                frameworks = [
+                    ("FastAPI", fastapi["throughput"], fastapi["error_rate"]),
+                    ("Django WSGI", django["throughput"], django["error_rate"]),
+                    ("Django ASGI", django_asgi["throughput"], django_asgi["error_rate"])
+                ]
+                
+                # Filter out frameworks with high error rates
+                valid_frameworks = [f for f in frameworks if f[2] <= 10]
+                if valid_frameworks:
+                    winner = max(valid_frameworks, key=lambda x: x[1])[0]
+                else:
                     winner = "N/A (High Errors)"
                 
-                report += f"| {fastapi['concurrent_users']} | {fastapi['throughput']:.2f} | {django['throughput']:.2f} | {fastapi['error_rate']:.2f}% | {django['error_rate']:.2f}% | {winner} |\n"
+                report += f"| {fastapi['concurrent_users']} | {fastapi['throughput']:.2f} | {django['throughput']:.2f} | {django_asgi['throughput']:.2f} | {fastapi['error_rate']:.2f}% | {django['error_rate']:.2f}% | {django_asgi['error_rate']:.2f}% | {winner} |\n"
         
         report += f"""
 ## Detailed Results
@@ -408,10 +449,26 @@ class SimpleIncrementalBenchmark:
 """
         
         report += f"""
-### Django Results
+### Django WSGI Results
 """
         
         for result in django_results:
+            report += f"""
+#### {result['concurrent_users']} Concurrent Users
+- **Throughput**: {result['throughput']:.2f} RPS
+- **Error Rate**: {result['error_rate']:.2f}%
+- **Avg Response Time**: {result['avg_response_time']:.3f}s
+- **P95 Response Time**: {result['p95_response_time']:.3f}s
+- **P99 Response Time**: {result['p99_response_time']:.3f}s
+- **Avg CPU**: {result.get('avg_cpu_percent', 0):.1f}%
+- **Avg Memory**: {result.get('avg_memory_mb', 0):.1f}MB (max {result.get('max_memory_mb', 0):.1f}MB)
+"""
+
+        report += f"""
+### Django ASGI Results
+"""
+        
+        for result in django_asgi_results:
             report += f"""
 #### {result['concurrent_users']} Concurrent Users
 - **Throughput**: {result['throughput']:.2f} RPS
@@ -428,16 +485,19 @@ class SimpleIncrementalBenchmark:
 
 ### Performance Trends
 - **FastAPI**: {'Shows async advantages at higher concurrency' if any(r['error_rate'] < 10 for r in fastapi_results) else 'Struggles with high concurrency'}
-- **Django**: {'Maintains consistent performance' if any(r['error_rate'] < 10 for r in django_results) else 'Shows degradation at high concurrency'}
+- **Django WSGI**: {'Maintains consistent performance' if any(r['error_rate'] < 10 for r in django_results) else 'Shows degradation at high concurrency'}
+- **Django ASGI**: {'Shows async advantages similar to FastAPI' if any(r['error_rate'] < 10 for r in django_asgi_results) else 'Struggles with high concurrency'}
 
 ### Breaking Points
 - **FastAPI Breaking Point**: {max([r['concurrent_users'] for r in fastapi_results if r['error_rate'] < 10], default='Unknown')} users
-- **Django Breaking Point**: {max([r['concurrent_users'] for r in django_results if r['error_rate'] < 10], default='Unknown')} users
+- **Django WSGI Breaking Point**: {max([r['concurrent_users'] for r in django_results if r['error_rate'] < 10], default='Unknown')} users
+- **Django ASGI Breaking Point**: {max([r['concurrent_users'] for r in django_asgi_results if r['error_rate'] < 10], default='Unknown')} users
 
 ### Recommendations
-- **For Low-Medium Concurrency**: Both frameworks perform well
-- **For High Concurrency**: {'FastAPI' if max([r['throughput'] for r in fastapi_results if r['error_rate'] < 10], default=0) > max([r['throughput'] for r in django_results if r['error_rate'] < 10], default=0) else 'Django'} shows better performance
-- **For Reliability**: {'Django' if any(r['error_rate'] == 0 for r in django_results) else 'FastAPI'} shows better error handling
+- **For Low-Medium Concurrency**: All frameworks perform well
+- **For High Concurrency**: {'FastAPI' if max([r['throughput'] for r in fastapi_results if r['error_rate'] < 10], default=0) > max([r['throughput'] for r in django_asgi_results if r['error_rate'] < 10], default=0) else 'Django ASGI'} shows better async performance
+- **For Reliability**: {'Django WSGI' if any(r['error_rate'] == 0 for r in django_results) else 'FastAPI' if any(r['error_rate'] == 0 for r in fastapi_results) else 'Django ASGI'} shows better error handling
+- **For Django Migration**: Django ASGI provides a good middle ground between Django WSGI and FastAPI
 
 ---
 *Report generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}*
@@ -448,16 +508,17 @@ class SimpleIncrementalBenchmark:
         print(f"Report saved to {filename}")
 
 async def main():
-    parser = argparse.ArgumentParser(description='Simple Incremental FastAPI vs Django Benchmark')
-    parser.add_argument('--fastapi-url', default='http://localhost:8000', help='FastAPI URL')
-    parser.add_argument('--django-url', default='http://localhost:8001', help='Django URL')
+    parser = argparse.ArgumentParser(description='Simple Incremental FastAPI vs Django WSGI vs Django ASGI Benchmark')
+    parser.add_argument('--fastapi-url', default='http://localhost:18000', help='FastAPI URL')
+    parser.add_argument('--django-url', default='http://localhost:18001', help='Django WSGI URL')
+    parser.add_argument('--django-asgi-url', default='http://localhost:18002', help='Django ASGI URL')
     parser.add_argument('--max-concurrent', type=int, default=1000, help='Maximum concurrent users')
     parser.add_argument('--step', type=int, default=50, help='Step size for concurrency')
     parser.add_argument('--duration', type=int, default=30, help='Duration per test in seconds')
     
     args = parser.parse_args()
     
-    benchmark = SimpleIncrementalBenchmark(args.fastapi_url, args.django_url)
+    benchmark = SimpleIncrementalBenchmark(args.fastapi_url, args.django_url, args.django_asgi_url)
     
     try:
         await benchmark.run_incremental_benchmark(
@@ -470,7 +531,7 @@ async def main():
         benchmark.generate_report()
         
         print("\n" + "="*80)
-        print("INCREMENTAL BENCHMARK COMPLETED")
+        print("INCREMENTAL BENCHMARK COMPLETED - FastAPI vs Django WSGI vs Django ASGI")
         print("="*80)
         
     except KeyboardInterrupt:

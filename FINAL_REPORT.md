@@ -1,3 +1,86 @@
+# FastAPI vs Django WSGI vs Django ASGI — Final Report
+
+Date: 2025-09-18
+
+## Overview
+- Goal: Compare throughput, latency, error rate, CPU, and memory across three backends with the same business logic and identical resource limits.
+- Backends:
+  - FastAPI (ASGI, Tortoise ORM, uvloop)
+  - Django WSGI (sync views, Django ORM)
+  - Django ASGI (async views for I/O; Django ORM executed safely via thread offloading)
+- Equalization:
+  - Dockerized services, 1 CPU and ~2GB RAM per app
+  - One worker per app (gunicorn for WSGI, uvicorn for ASGI)
+  - Same io-intensive workload (2x file I/O, 8x DB I/O), executed sequentially for parity
+- Database: MySQL (separate container). Migrations applied for all apps.
+
+## Methodology
+- Incremental benchmark across 10 concurrency levels: 10 → 100 concurrent users
+- Duration: 10 seconds per framework per level (gaps between runs)
+- Load generator: aiohttp-based client; metrics aggregated per framework per level
+- Endpoints under test:
+  - FastAPI: `/io-intensive`
+  - Django WSGI: `/api/benchmark/io_intensive/`
+  - Django ASGI: `/api/benchmark/io_intensive/` (async function-based view)
+
+## Summary Results (Throughput and Error Rate)
+
+| Concurrency | FastAPI Thr (RPS) | Django WSGI Thr (RPS) | Django ASGI Thr (RPS) | FastAPI Err % | Django WSGI Err % | Django ASGI Err % |
+|-------------|-------------------|------------------------|-----------------------|---------------|-------------------|-------------------|
+| 10 | 270.79 | 72.90 | 49.16 | 0.04% | 0.00% | 0.00% |
+| 20 | 286.27 | 72.83 | 49.21 | 0.00% | 0.00% | 0.00% |
+| 30 | 296.99 | 72.48 | 49.61 | 0.00% | 0.00% | 0.00% |
+| 40 | 270.86 | 74.10 | 48.42 | 0.18% | 0.00% | 0.00% |
+| 50 | 289.15 | 74.12 | 49.58 | 0.00% | 0.00% | 0.00% |
+| 60 | 292.44 | 74.02 | 48.70 | 0.00% | 0.00% | 0.00% |
+| 70 | 281.42 | 73.83 | 48.79 | 0.00% | 0.00% | 0.00% |
+| 80 | 250.20 | 74.21 | 49.07 | 2.11% | 0.00% | 0.00% |
+| 90 | 280.89 | 74.00 | 49.49 | 0.00% | 0.00% | 0.00% |
+| 100 | 273.82 | 74.11 | 49.52 | 0.00% | 0.00% | 0.00% |
+
+Full per-level details (avg, P95, P99, CPU, memory) are in `results/incremental_benchmark_report.md` and `results/incremental_benchmark_results.json`.
+
+## Key Findings
+- Throughput
+  - FastAPI consistently leads (~250–297 RPS typical), scaling best with concurrency.
+  - Django WSGI is stable around ~72–74 RPS across levels.
+  - Django ASGI is stable around ~49–50 RPS and does not surpass Django WSGI in this setup.
+- Latency
+  - FastAPI has the lowest average and tail latencies; WSGI moderate; ASGI highest tails under load.
+- Errors
+  - Negligible for Django WSGI and Django ASGI in these runs.
+  - FastAPI saw a small error spike (~2.11%) only at 80 users; otherwise 0% or near-zero.
+- Resource Usage
+  - Django ASGI memory grows with concurrency more than WSGI.
+  - CPU tends to saturate at higher concurrencies for all three, as expected.
+
+## Interpretation
+- Django ASGI did not outperform Django WSGI because the Django ORM is synchronous with MySQL in this configuration. Even with async views, ORM work runs in threads, adding overhead that negates ASGI benefits.
+- FastAPI uses a fully async stack (uvloop + Tortoise ORM + async MySQL driver), so it benefits more as concurrency increases.
+
+## Recommendations
+- Staying on Django + MySQL (sync ORM):
+  - Prefer WSGI for simplicity and predictable performance.
+  - If using ASGI, minimize thread offloading overhead (batch DB work, avoid per-call thread churn).
+- If pursuing higher throughput with Django ASGI:
+  - Consider an async-friendly DB stack (e.g., PostgreSQL with async driver) as Django’s async ORM support matures.
+  - Consider multiple ASGI workers for parallelism (not used here for fairness).
+- For maximum throughput on this workload: FastAPI is the best fit due to its end-to-end async stack.
+
+## Artifacts
+- Detailed report: `results/incremental_benchmark_report.md`
+- Raw data (JSON): `results/incremental_benchmark_results.json`
+- Plots:
+  - `results/throughput_vs_concurrency.png`
+  - `results/error_rate_vs_concurrency.png`
+  - `results/cpu_usage_vs_concurrency.png`
+  - `results/duration_vs_concurrency.png`
+  - `results/total_requests_vs_concurrency.png`
+
+## Reproduce
+- One-command run: `./start_benchmark.sh`
+- Services: FastAPI on 18000, Django WSGI on 18001, Django ASGI on 18002
+
 # FastAPI vs Django Performance Benchmark - Final Report (Updated)
 
 ## Executive Summary

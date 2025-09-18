@@ -1,0 +1,30 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements/django_asgi_requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r django_asgi_requirements.txt
+
+# Copy application code
+COPY django_asgi_app/ .
+
+# Create data directory
+RUN mkdir -p /app/data
+
+# Expose port
+EXPOSE 8002
+
+# Run migrations and start server
+CMD ["sh", "-c", "python manage.py migrate && uvicorn benchmark_project_asgi.asgi:application --host 0.0.0.0 --port 8002 --workers 1"]

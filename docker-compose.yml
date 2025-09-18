@@ -60,7 +60,26 @@ services:
     mem_limit: 2g
     restart: unless-stopped
 
+  django-asgi:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django-asgi
+    ports:
+      - "18002:8002"
+    volumes:
+      - ./django_asgi_app:/app
+      - django_asgi_data:/app/data
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=mysql://benchmark_user:benchmark_pass@mysql:3306/benchmark_django_asgi
+    depends_on:
+      - mysql
+    cpus: 1.0
+    mem_limit: 2g
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   fastapi_data:
   django_data:
+  django_asgi_data:

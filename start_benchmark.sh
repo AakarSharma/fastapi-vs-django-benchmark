@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# FastAPI vs Django Performance Benchmark Startup Script (Incremental)
+# FastAPI vs Django WSGI vs Django ASGI Performance Benchmark Startup Script (Incremental)
 
-echo "🚀 Starting FastAPI vs Django Performance Benchmark"
+echo "🚀 Starting FastAPI vs Django WSGI vs Django ASGI Performance Benchmark"
 echo "=================================================="
 
 # Check if Docker is running
@@ -35,17 +35,29 @@ else
     exit 1
 fi
 
-# Check Django
+# Check Django WSGI
 if curl -s http://localhost:18001/api/benchmark/health/ > /dev/null; then
-    echo "✅ Django is running on http://localhost:18001"
+    echo "✅ Django WSGI is running on http://localhost:18001"
 else
-    echo "❌ Django is not responding"
+    echo "❌ Django WSGI is not responding"
     exit 1
 fi
 
-# Apply Django migrations
-echo "🛠️ Applying Django migrations..."
+# Check Django ASGI
+if curl -s http://localhost:18002/api/benchmark/health/ > /dev/null; then
+    echo "✅ Django ASGI is running on http://localhost:18002"
+else
+    echo "❌ Django ASGI is not responding"
+    exit 1
+fi
+
+# Apply Django WSGI migrations
+echo "🛠️ Applying Django WSGI migrations..."
 docker-compose exec -T django python manage.py migrate --noinput
+
+# Apply Django ASGI migrations
+echo "🛠️ Applying Django ASGI migrations..."
+docker-compose exec -T django-asgi python manage.py migrate --noinput
 
 # Initialize and upgrade FastAPI (Tortoise) migrations via Aerich
 echo "🧭 Running Aerich migrations for FastAPI..."
@@ -60,7 +72,7 @@ python3 -m venv venv
 ./venv/bin/pip install aiohttp matplotlib >/dev/null
 
 echo "🏃 Running incremental benchmark (10→200 users)..."
-./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --max-concurrent 100 --step 10 --duration 10
+./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --django-asgi-url http://localhost:18002 --max-concurrent 100 --step 10 --duration 10
 
 echo "✅ Smoke benchmark complete. Starting full benchmark..."
 
