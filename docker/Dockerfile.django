@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+
+COPY requirements/django_requirements.txt .
+RUN pip install --no-cache-dir -r django_requirements.txt
+
+COPY django_app/ .
+
+RUN mkdir -p /app/data
+
+EXPOSE 8001
+
+CMD ["gunicorn", "benchmark_project.wsgi:application", "-w", "1", "--threads", "8", "--bind", "0.0.0.0:8001", "--timeout", "300", "--max-requests", "10000", "--max-requests-jitter", "1000", "--worker-connections", "2000", "--keep-alive", "60", "--backlog", "2048", "--preload"]
