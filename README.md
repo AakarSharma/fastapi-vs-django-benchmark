@@ -55,6 +55,28 @@ Outputs:
 - `results/incremental_benchmark_report.md`
 - `results/throughput_vs_concurrency.png`
 - `results/error_rate_vs_concurrency.png`
+- `results/cpu_usage_vs_concurrency.png`
+- `results/duration_vs_concurrency.png`
+- `results/total_requests_vs_concurrency.png`
+
+## Benchmark Results
+
+The benchmark generates several performance visualizations:
+
+### Throughput vs Concurrency
+![Throughput vs Concurrency](results/throughput_vs_concurrency.png)
+
+### Error Rate vs Concurrency
+![Error Rate vs Concurrency](results/error_rate_vs_concurrency.png)
+
+### CPU Usage vs Concurrency
+![CPU Usage vs Concurrency](results/cpu_usage_vs_concurrency.png)
+
+### Duration vs Concurrency
+![Duration vs Concurrency](results/duration_vs_concurrency.png)
+
+### Total Requests vs Concurrency
+![Total Requests vs Concurrency](results/total_requests_vs_concurrency.png)
 
 ## 2) Manual Run (Optional)
 Start services:
