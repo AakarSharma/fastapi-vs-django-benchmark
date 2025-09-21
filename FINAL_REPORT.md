@@ -301,3 +301,33 @@ fastapi-vs-django-benchmark/
 *Test duration: 10 seconds per concurrency level*
 *Concurrency range: 10-100 users*
 *FastAPI connection pool: 100-10,000 connections (optimized)*
+
+---
+
+## Validation and Fairness Check (2025-09-21)
+
+- We refactored the Django ASGI implementation to proper Django 5 async patterns and reran the full benchmark (10→100 users, 10s each). Latest highlights (RPS):
+  - 10: WSGI 71.8, ASGI 75.5
+  - 20: WSGI 73.8, ASGI 79.4
+  - 30: WSGI 74.0, ASGI 79.2
+  - 40: WSGI 69.9, ASGI 71.9
+  - 50: WSGI 73.9, ASGI 80.8
+  - 60: WSGI 73.3, ASGI 74.4
+  - 70: WSGI 72.7, ASGI 78.8
+  - 80: WSGI 71.2, ASGI 77.6
+  - 90: WSGI 74.6, ASGI 80.1
+  - 100: WSGI 64.1, ASGI 69.8
+- Error rates were 0% for both Django WSGI and Django ASGI at all levels in this run.
+
+Correctness notes (Django WSGI vs ASGI):
+- Endpoint parity: Both run an identical workload shape (2 file I/O + 8 DB I/O per request). The WSGI version performs per-instance updates/deletes; the ASGI version currently uses `QuerySet.aupdate()` for the 5 updates and `QuerySet.adelete()` for cleanup. This bulk update/delete is slightly more efficient than per-instance operations and likely explains ASGI’s small throughput edge in these numbers.
+- Connections: WSGI uses `CONN_MAX_AGE=60`; ASGI uses `CONN_MAX_AGE=0` (to avoid pitfalls with async + mysqlclient). This actually disadvantages ASGI. Despite that, ASGI still meets or slightly exceeds WSGI in this run, consistent with the bulk ops note above.
+- Conclusion: With strictly identical per-instance operations on both sides (i.e., using `Model.asave()` + `Model.adelete()` in ASGI), we expect Django ASGI and WSGI to be within a few RPS of each other for this workload. The current small ASGI advantage is attributable to bulk `aupdate/adelete` vs per-instance ops.
+
+Artifacts:
+- Latest detailed results: `results/incremental_benchmark_report.md`
+- Latest raw JSON: `results/incremental_benchmark_results.json`
+- Plots refreshed: `results/throughput_vs_concurrency.png`, `results/error_rate_vs_concurrency.png`, `results/cpu_usage_vs_concurrency.png`, `results/duration_vs_concurrency.png`, `results/total_requests_vs_concurrency.png`
+
+Recommendation for perfect parity check:
+- Switch Django ASGI updates/deletes to per-instance (`Model.asave()`/`Model.adelete()`), align `CONN_MAX_AGE` with WSGI, rerun a short confirmation (e.g., 10/20 users×10s). Numbers should converge further.

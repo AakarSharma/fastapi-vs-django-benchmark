@@ -57,7 +57,8 @@ DATABASES = {
         'PASSWORD': 'benchmark_pass',
         'HOST': 'mysql',
         'PORT': '3306',
-        'CONN_MAX_AGE': 60,
+        # Disable persistent connections for async safety with mysqlclient
+        'CONN_MAX_AGE': 0,
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4',

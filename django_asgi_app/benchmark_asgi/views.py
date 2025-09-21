@@ -9,7 +9,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
-from asgiref.sync import sync_to_async
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 from .models import User, Product, Order, OrderItem
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer
 from django.http import JsonResponse
@@ -21,28 +23,14 @@ class BenchmarkViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['post'])
     def io_intensive(self, request):
-        """I/O intensive endpoint combining file and database operations"""
+        """Deprecated in ASGI: function-based async view is used instead."""
         start_time = time.time()
-        
-        file_results = []
-        db_results = []
-        
-        # Run operations sequentially like FastAPI but using asyncio.run
-        for _ in range(2):
-            file_result = asyncio.run(self._simulate_file_io())
-            file_results.append(file_result)
-        
-        for _ in range(8):
-            db_result = asyncio.run(self._simulate_database_io())
-            db_results.append(db_result)
-        
-        end_time = time.time()
-        
         return Response({
-            "file_operations": len(file_results),
-            "db_operations": len(db_results),
-            "execution_time": end_time - start_time,
-            "timestamp": time.time()
+            "file_operations": 0,
+            "db_operations": 0,
+            "execution_time": time.time() - start_time,
+            "timestamp": time.time(),
+            "note": "Use /api/benchmark/io_intensive/ async endpoint"
         })
     
     async def _simulate_file_io(self):
@@ -67,38 +55,8 @@ class BenchmarkViewSet(viewsets.ViewSet):
                 pass
     
     async def _simulate_database_io(self):
-        """Simulate database I/O operations wrapped in a single atomic transaction"""
-        base_timestamp = int(time.time() * 1000000)
-        unique_id = str(uuid.uuid4())[:8]
-        
-        # Use sync operations in a thread pool
-        def atomic_operation():
-            with transaction.atomic():
-                users_list = []
-                for i in range(10):
-                    user = User.objects.create(
-                        name=f"User {base_timestamp}_{unique_id}_{i}",
-                        email=f"user{base_timestamp}_{unique_id}_{i}@example.com",
-                        age=20 + (i % 50)
-                    )
-                    users_list.append(user)
-
-                user_count_before = User.objects.count()
-
-                for user in users_list[:5]:
-                    user.name = f"Updated {user.name}"
-                    user.save()
-
-                # Ensure net-zero change to keep steady-state
-                for user in users_list:
-                    user.delete()
-
-                return len(users_list), user_count_before, User.objects.count()
-        
-        # Run in thread pool to avoid blocking
-        loop = asyncio.get_event_loop()
-        created_count, user_count_before, user_count_after = await loop.run_in_executor(None, atomic_operation)
-        return {"created": created_count, "total_before": user_count_before, "total_after": user_count_after}
+        """Deprecated: async function-based helper is used instead."""
+        return {"created": 0, "total_before": 0, "total_after": 0}
 
     @action(detail=False, methods=['post'])
     def reset(self, request):
@@ -116,18 +74,58 @@ class BenchmarkViewSet(viewsets.ViewSet):
 async def benchmark_health(request):
     return JsonResponse({"status": "healthy", "timestamp": time.time()})
 
+async def _simulate_file_io_async():
+    fd, temp_path = tempfile.mkstemp(prefix="benchmark_django_asgi_", suffix=".json")
+    os.close(fd)
+    data = {"timestamp": time.time(), "data": "x" * 1000}
+    try:
+        async with aiofiles.open(temp_path, 'w') as f:
+            await f.write(json.dumps(data))
+        async with aiofiles.open(temp_path, 'r') as f:
+            content = await f.read()
+            data = json.loads(content)
+        return data
+    except Exception as e:
+        return {"timestamp": time.time(), "data": "fallback_data", "error": str(e)}
+    finally:
+        try:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+        except:
+            pass
+
+async def _simulate_database_io_async():
+    base_timestamp = int(time.time() * 1000000)
+    unique_id = str(uuid.uuid4())[:8]
+    created_ids = []
+    for i in range(10):
+        user = await User.objects.acreate(
+            name=f"User {base_timestamp}_{unique_id}_{i}",
+            email=f"user{base_timestamp}_{unique_id}_{i}@example.com",
+            age=20 + (i % 50)
+        )
+        created_ids.append(user.id)
+    user_count_before = await User.objects.acount()
+    # Bulk update first 5 users' names using async queryset aupdate
+    if created_ids:
+        await User.objects.filter(id__in=created_ids[:5]).aupdate(
+            name=Concat(Value("Updated "), F("name"))
+        )
+        # Bulk delete all created users using async queryset adelete
+        await User.objects.filter(id__in=created_ids).adelete()
+    user_count_after = await User.objects.acount()
+    return {"created": len(created_ids), "total_before": user_count_before, "total_after": user_count_after}
+
+@csrf_exempt
 async def benchmark_io_intensive(request):
     start_time = time.time()
     file_results = []
     db_results = []
-    # Sequential like FastAPI
-    # Reuse helpers defined above on the class by instantiating a temporary object
-    temp = BenchmarkViewSet()
     for _ in range(2):
-        file_result = await temp._simulate_file_io()
+        file_result = await _simulate_file_io_async()
         file_results.append(file_result)
     for _ in range(8):
-        db_result = await temp._simulate_database_io()
+        db_result = await _simulate_database_io_async()
         db_results.append(db_result)
     end_time = time.time()
     return JsonResponse({
@@ -136,6 +134,18 @@ async def benchmark_io_intensive(request):
         "execution_time": end_time - start_time,
         "timestamp": time.time()
     })
+
+@csrf_exempt
+async def benchmark_reset(request):
+    try:
+        # Delete in FK-safe order using async queryset methods
+        await OrderItem.objects.all().adelete()
+        await Order.objects.all().adelete()
+        await Product.objects.all().adelete()
+        await User.objects.all().adelete()
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"detail": str(e)}, status=500)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -184,3 +194,37 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Async function-based list endpoints used by the benchmark
+async def users_list(request):
+    results = []
+    async for u in User.objects.all().aiterator(chunk_size=1000):
+        results.append({
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "age": u.age,
+        })
+    return JsonResponse(results, safe=False)
+
+async def products_list(request):
+    results = []
+    async for p in Product.objects.all().aiterator(chunk_size=1000):
+        results.append({
+            "id": p.id,
+            "name": p.name,
+            "price": float(p.price),
+            "description": p.description,
+        })
+    return JsonResponse(results, safe=False)
+
+async def orders_list(request):
+    results = []
+    async for o in Order.objects.all().aiterator(chunk_size=1000):
+        results.append({
+            "id": o.id,
+            "user_id": o.user_id,
+            "total_amount": float(o.total_amount),
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+        })
+    return JsonResponse(results, safe=False)

@@ -10,294 +10,294 @@
 
 | Concurrency | FAPI Thr (RPS) | DJ WSGI Thr (RPS) | DJ ASGI Thr (RPS) | FAPI Err % | DJ WSGI Err % | DJ ASGI Err % | Winner |
 |-------------|----------------|-------------------|-------------------|------------|---------------|---------------|--------|
-| 10 | 270.79 | 72.90 | 49.16 | 0.04% | 0.00% | 0.00% | FastAPI |
-| 20 | 286.27 | 72.83 | 49.21 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 30 | 296.99 | 72.48 | 49.61 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 40 | 270.86 | 74.10 | 48.42 | 0.18% | 0.00% | 0.00% | FastAPI |
-| 50 | 289.15 | 74.12 | 49.58 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 60 | 292.44 | 74.02 | 48.70 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 70 | 281.42 | 73.83 | 48.79 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 80 | 250.20 | 74.21 | 49.07 | 2.11% | 0.00% | 0.00% | FastAPI |
-| 90 | 280.89 | 74.00 | 49.49 | 0.00% | 0.00% | 0.00% | FastAPI |
-| 100 | 273.82 | 74.11 | 49.52 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 10 | 277.37 | 71.83 | 75.50 | 0.07% | 0.00% | 0.00% | FastAPI |
+| 20 | 285.49 | 73.79 | 79.44 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 30 | 296.42 | 74.03 | 79.16 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 40 | 274.51 | 69.89 | 71.88 | 0.39% | 0.00% | 0.00% | FastAPI |
+| 50 | 270.28 | 73.94 | 80.77 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 60 | 290.86 | 73.29 | 74.36 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 70 | 285.14 | 72.67 | 78.82 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 80 | 246.22 | 71.19 | 77.62 | 1.74% | 0.00% | 0.00% | FastAPI |
+| 90 | 287.65 | 74.57 | 80.11 | 0.00% | 0.00% | 0.00% | FastAPI |
+| 100 | 252.20 | 64.11 | 69.79 | 0.00% | 0.00% | 0.00% | FastAPI |
 
 ## Detailed Results
 
 ### FastAPI Results
 
 #### 10 Concurrent Users
-- **Throughput**: 270.79 RPS
-- **Error Rate**: 0.04%
-- **Avg Response Time**: 0.028s
-- **P95 Response Time**: 0.117s
+- **Throughput**: 277.37 RPS
+- **Error Rate**: 0.07%
+- **Avg Response Time**: 0.029s
+- **P95 Response Time**: 0.119s
 - **P99 Response Time**: 0.127s
-- **Avg CPU**: 90.9%
-- **Avg Memory**: 62.8MB (max 63.2MB)
+- **Avg CPU**: 100.3%
+- **Avg Memory**: 65.5MB (max 66.3MB)
 
 #### 20 Concurrent Users
-- **Throughput**: 286.27 RPS
+- **Throughput**: 285.49 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.059s
-- **P95 Response Time**: 0.249s
-- **P99 Response Time**: 0.261s
-- **Avg CPU**: 97.2%
-- **Avg Memory**: 63.3MB (max 63.4MB)
+- **Avg Response Time**: 0.060s
+- **P95 Response Time**: 0.253s
+- **P99 Response Time**: 0.282s
+- **Avg CPU**: 101.1%
+- **Avg Memory**: 68.8MB (max 68.9MB)
 
 #### 30 Concurrent Users
-- **Throughput**: 296.99 RPS
+- **Throughput**: 296.42 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.088s
-- **P95 Response Time**: 0.371s
-- **P99 Response Time**: 0.391s
-- **Avg CPU**: 99.0%
-- **Avg Memory**: 73.6MB (max 73.8MB)
+- **Avg Response Time**: 0.089s
+- **P95 Response Time**: 0.375s
+- **P99 Response Time**: 0.400s
+- **Avg CPU**: 101.3%
+- **Avg Memory**: 78.5MB (max 78.7MB)
 
 #### 40 Concurrent Users
-- **Throughput**: 270.86 RPS
-- **Error Rate**: 0.18%
-- **Avg Response Time**: 0.127s
-- **P95 Response Time**: 0.497s
-- **P99 Response Time**: 0.950s
-- **Avg CPU**: 101.5%
-- **Avg Memory**: 85.7MB (max 94.1MB)
+- **Throughput**: 274.51 RPS
+- **Error Rate**: 0.39%
+- **Avg Response Time**: 0.132s
+- **P95 Response Time**: 0.513s
+- **P99 Response Time**: 0.915s
+- **Avg CPU**: 101.1%
+- **Avg Memory**: 87.9MB (max 96.9MB)
 
 #### 50 Concurrent Users
-- **Throughput**: 289.15 RPS
+- **Throughput**: 270.28 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.155s
-- **P95 Response Time**: 0.650s
-- **P99 Response Time**: 0.706s
-- **Avg CPU**: 80.6%
-- **Avg Memory**: 94.2MB (max 94.3MB)
+- **Avg Response Time**: 0.168s
+- **P95 Response Time**: 0.712s
+- **P99 Response Time**: 0.770s
+- **Avg CPU**: 81.5%
+- **Avg Memory**: 96.8MB (max 97.0MB)
 
 #### 60 Concurrent Users
-- **Throughput**: 292.44 RPS
+- **Throughput**: 290.86 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.186s
-- **P95 Response Time**: 0.778s
-- **P99 Response Time**: 0.817s
-- **Avg CPU**: 101.7%
-- **Avg Memory**: 94.6MB (max 94.7MB)
+- **Avg Response Time**: 0.187s
+- **P95 Response Time**: 0.786s
+- **P99 Response Time**: 0.827s
+- **Avg CPU**: 100.7%
+- **Avg Memory**: 97.2MB (max 97.7MB)
 
 #### 70 Concurrent Users
-- **Throughput**: 281.42 RPS
+- **Throughput**: 285.14 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.226s
-- **P95 Response Time**: 0.947s
-- **P99 Response Time**: 1.016s
-- **Avg CPU**: 101.5%
-- **Avg Memory**: 95.0MB (max 95.1MB)
+- **Avg Response Time**: 0.224s
+- **P95 Response Time**: 0.943s
+- **P99 Response Time**: 0.983s
+- **Avg CPU**: 101.8%
+- **Avg Memory**: 97.6MB (max 97.8MB)
 
 #### 80 Concurrent Users
-- **Throughput**: 250.20 RPS
-- **Error Rate**: 2.11%
-- **Avg Response Time**: 0.261s
-- **P95 Response Time**: 1.015s
-- **P99 Response Time**: 1.644s
+- **Throughput**: 246.22 RPS
+- **Error Rate**: 1.74%
+- **Avg Response Time**: 0.289s
+- **P95 Response Time**: 1.133s
+- **P99 Response Time**: 1.777s
 - **Avg CPU**: 81.3%
-- **Avg Memory**: 106.0MB (max 116.9MB)
+- **Avg Memory**: 115.5MB (max 120.0MB)
 
 #### 90 Concurrent Users
-- **Throughput**: 280.89 RPS
+- **Throughput**: 287.65 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.291s
-- **P95 Response Time**: 1.226s
-- **P99 Response Time**: 1.289s
-- **Avg CPU**: 81.5%
-- **Avg Memory**: 120.5MB (max 120.6MB)
+- **Avg Response Time**: 0.285s
+- **P95 Response Time**: 1.199s
+- **P99 Response Time**: 1.254s
+- **Avg CPU**: 102.2%
+- **Avg Memory**: 120.2MB (max 120.4MB)
 
 #### 100 Concurrent Users
-- **Throughput**: 273.82 RPS
+- **Throughput**: 252.20 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.330s
-- **P95 Response Time**: 1.409s
-- **P99 Response Time**: 1.534s
-- **Avg CPU**: 100.2%
-- **Avg Memory**: 120.8MB (max 120.9MB)
+- **Avg Response Time**: 0.358s
+- **P95 Response Time**: 1.521s
+- **P99 Response Time**: 1.596s
+- **Avg CPU**: 83.4%
+- **Avg Memory**: 120.5MB (max 120.7MB)
 
 ### Django WSGI Results
 
 #### 10 Concurrent Users
-- **Throughput**: 72.90 RPS
+- **Throughput**: 71.83 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.121s
-- **P95 Response Time**: 0.461s
-- **P99 Response Time**: 0.533s
-- **Avg CPU**: 96.6%
-- **Avg Memory**: 59.7MB (max 64.8MB)
+- **Avg Response Time**: 0.124s
+- **P95 Response Time**: 0.467s
+- **P99 Response Time**: 0.561s
+- **Avg CPU**: 95.1%
+- **Avg Memory**: 57.9MB (max 64.8MB)
 
 #### 20 Concurrent Users
-- **Throughput**: 72.83 RPS
+- **Throughput**: 73.79 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.247s
-- **P95 Response Time**: 0.669s
-- **P99 Response Time**: 0.790s
-- **Avg CPU**: 80.5%
-- **Avg Memory**: 64.8MB (max 65.3MB)
+- **Avg Response Time**: 0.250s
+- **P95 Response Time**: 0.694s
+- **P99 Response Time**: 0.784s
+- **Avg CPU**: 101.7%
+- **Avg Memory**: 71.5MB (max 71.7MB)
 
 #### 30 Concurrent Users
-- **Throughput**: 72.48 RPS
+- **Throughput**: 74.03 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.372s
-- **P95 Response Time**: 0.801s
-- **P99 Response Time**: 0.880s
-- **Avg CPU**: 88.5%
-- **Avg Memory**: 65.1MB (max 65.6MB)
+- **Avg Response Time**: 0.364s
+- **P95 Response Time**: 0.792s
+- **P99 Response Time**: 0.895s
+- **Avg CPU**: 93.8%
+- **Avg Memory**: 71.3MB (max 72.0MB)
 
 #### 40 Concurrent Users
-- **Throughput**: 74.10 RPS
+- **Throughput**: 69.89 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.485s
-- **P95 Response Time**: 0.888s
-- **P99 Response Time**: 1.113s
-- **Avg CPU**: 101.4%
-- **Avg Memory**: 69.9MB (max 70.1MB)
+- **Avg Response Time**: 0.512s
+- **P95 Response Time**: 0.958s
+- **P99 Response Time**: 1.130s
+- **Avg CPU**: 102.0%
+- **Avg Memory**: 71.7MB (max 72.0MB)
 
 #### 50 Concurrent Users
-- **Throughput**: 74.12 RPS
+- **Throughput**: 73.94 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.597s
-- **P95 Response Time**: 1.095s
-- **P99 Response Time**: 1.271s
-- **Avg CPU**: 91.6%
-- **Avg Memory**: 70.2MB (max 70.5MB)
+- **Avg Response Time**: 0.609s
+- **P95 Response Time**: 1.141s
+- **P99 Response Time**: 1.252s
+- **Avg CPU**: 90.2%
+- **Avg Memory**: 72.2MB (max 72.6MB)
 
 #### 60 Concurrent Users
-- **Throughput**: 74.02 RPS
+- **Throughput**: 73.29 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.707s
-- **P95 Response Time**: 1.173s
-- **P99 Response Time**: 1.281s
-- **Avg CPU**: 101.0%
-- **Avg Memory**: 70.5MB (max 70.7MB)
+- **Avg Response Time**: 0.710s
+- **P95 Response Time**: 1.230s
+- **P99 Response Time**: 1.471s
+- **Avg CPU**: 98.6%
+- **Avg Memory**: 72.1MB (max 72.6MB)
 
 #### 70 Concurrent Users
-- **Throughput**: 73.83 RPS
+- **Throughput**: 72.67 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.856s
-- **P95 Response Time**: 1.446s
-- **P99 Response Time**: 1.691s
-- **Avg CPU**: 88.1%
-- **Avg Memory**: 70.4MB (max 70.9MB)
+- **Avg Response Time**: 0.858s
+- **P95 Response Time**: 1.382s
+- **P99 Response Time**: 1.605s
+- **Avg CPU**: 93.9%
+- **Avg Memory**: 72.6MB (max 72.9MB)
 
 #### 80 Concurrent Users
-- **Throughput**: 74.21 RPS
+- **Throughput**: 71.19 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.956s
-- **P95 Response Time**: 1.466s
-- **P99 Response Time**: 1.624s
-- **Avg CPU**: 102.1%
-- **Avg Memory**: 71.0MB (max 71.5MB)
+- **Avg Response Time**: 1.005s
+- **P95 Response Time**: 1.585s
+- **P99 Response Time**: 1.812s
+- **Avg CPU**: 93.4%
+- **Avg Memory**: 72.7MB (max 73.4MB)
 
 #### 90 Concurrent Users
-- **Throughput**: 74.00 RPS
+- **Throughput**: 74.57 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.051s
-- **P95 Response Time**: 1.600s
-- **P99 Response Time**: 1.692s
-- **Avg CPU**: 86.5%
-- **Avg Memory**: 71.1MB (max 71.7MB)
+- **Avg Response Time**: 1.057s
+- **P95 Response Time**: 1.596s
+- **P99 Response Time**: 1.747s
+- **Avg CPU**: 101.6%
+- **Avg Memory**: 73.2MB (max 73.8MB)
 
 #### 100 Concurrent Users
-- **Throughput**: 74.11 RPS
+- **Throughput**: 64.11 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.127s
-- **P95 Response Time**: 1.733s
-- **P99 Response Time**: 2.022s
-- **Avg CPU**: 101.3%
-- **Avg Memory**: 71.4MB (max 71.7MB)
+- **Avg Response Time**: 1.395s
+- **P95 Response Time**: 2.217s
+- **P99 Response Time**: 2.446s
+- **Avg CPU**: 101.8%
+- **Avg Memory**: 73.5MB (max 74.0MB)
 
 ### Django ASGI Results
 
 #### 10 Concurrent Users
-- **Throughput**: 49.16 RPS
+- **Throughput**: 75.50 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.184s
-- **P95 Response Time**: 0.689s
-- **P99 Response Time**: 0.722s
-- **Avg CPU**: 100.9%
-- **Avg Memory**: 60.6MB (max 64.2MB)
+- **Avg Response Time**: 0.118s
+- **P95 Response Time**: 0.442s
+- **P99 Response Time**: 0.459s
+- **Avg CPU**: 99.6%
+- **Avg Memory**: 51.7MB (max 54.3MB)
 
 #### 20 Concurrent Users
-- **Throughput**: 49.21 RPS
+- **Throughput**: 79.44 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.368s
-- **P95 Response Time**: 1.229s
-- **P99 Response Time**: 1.303s
-- **Avg CPU**: 80.7%
-- **Avg Memory**: 75.3MB (max 79.3MB)
+- **Avg Response Time**: 0.228s
+- **P95 Response Time**: 0.808s
+- **P99 Response Time**: 0.842s
+- **Avg CPU**: 103.9%
+- **Avg Memory**: 58.4MB (max 62.0MB)
 
 #### 30 Concurrent Users
-- **Throughput**: 49.61 RPS
+- **Throughput**: 79.16 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.548s
-- **P95 Response Time**: 1.569s
-- **P99 Response Time**: 1.645s
-- **Avg CPU**: 85.7%
-- **Avg Memory**: 89.2MB (max 92.3MB)
+- **Avg Response Time**: 0.340s
+- **P95 Response Time**: 1.192s
+- **P99 Response Time**: 1.248s
+- **Avg CPU**: 82.9%
+- **Avg Memory**: 68.7MB (max 70.2MB)
 
 #### 40 Concurrent Users
-- **Throughput**: 48.42 RPS
+- **Throughput**: 71.88 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.728s
-- **P95 Response Time**: 1.852s
-- **P99 Response Time**: 1.935s
-- **Avg CPU**: 100.0%
-- **Avg Memory**: 97.7MB (max 100.4MB)
+- **Avg Response Time**: 0.505s
+- **P95 Response Time**: 1.773s
+- **P99 Response Time**: 1.884s
+- **Avg CPU**: 94.9%
+- **Avg Memory**: 74.2MB (max 76.2MB)
 
 #### 50 Concurrent Users
-- **Throughput**: 49.58 RPS
+- **Throughput**: 80.77 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 0.904s
-- **P95 Response Time**: 2.027s
-- **P99 Response Time**: 2.284s
-- **Avg CPU**: 102.0%
-- **Avg Memory**: 106.9MB (max 109.7MB)
+- **Avg Response Time**: 0.557s
+- **P95 Response Time**: 1.973s
+- **P99 Response Time**: 2.046s
+- **Avg CPU**: 88.9%
+- **Avg Memory**: 77.6MB (max 78.8MB)
 
 #### 60 Concurrent Users
-- **Throughput**: 48.70 RPS
+- **Throughput**: 74.36 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.057s
-- **P95 Response Time**: 2.334s
-- **P99 Response Time**: 2.559s
-- **Avg CPU**: 93.8%
-- **Avg Memory**: 114.5MB (max 117.2MB)
+- **Avg Response Time**: 0.711s
+- **P95 Response Time**: 2.498s
+- **P99 Response Time**: 2.701s
+- **Avg CPU**: 82.9%
+- **Avg Memory**: 80.5MB (max 81.9MB)
 
 #### 70 Concurrent Users
-- **Throughput**: 48.79 RPS
+- **Throughput**: 78.82 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.251s
-- **P95 Response Time**: 2.511s
-- **P99 Response Time**: 2.742s
-- **Avg CPU**: 100.7%
-- **Avg Memory**: 123.5MB (max 128.0MB)
+- **Avg Response Time**: 0.804s
+- **P95 Response Time**: 2.799s
+- **P99 Response Time**: 2.916s
+- **Avg CPU**: 94.2%
+- **Avg Memory**: 83.4MB (max 85.0MB)
 
 #### 80 Concurrent Users
-- **Throughput**: 49.07 RPS
+- **Throughput**: 77.62 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.464s
-- **P95 Response Time**: 2.836s
-- **P99 Response Time**: 3.057s
-- **Avg CPU**: 102.3%
-- **Avg Memory**: 134.6MB (max 138.8MB)
+- **Avg Response Time**: 0.935s
+- **P95 Response Time**: 3.272s
+- **P99 Response Time**: 3.481s
+- **Avg CPU**: 103.6%
+- **Avg Memory**: 87.0MB (max 88.4MB)
 
 #### 90 Concurrent Users
-- **Throughput**: 49.49 RPS
+- **Throughput**: 80.11 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.623s
-- **P95 Response Time**: 2.905s
-- **P99 Response Time**: 3.357s
-- **Avg CPU**: 98.8%
-- **Avg Memory**: 140.6MB (max 143.5MB)
+- **Avg Response Time**: 1.002s
+- **P95 Response Time**: 3.519s
+- **P99 Response Time**: 3.647s
+- **Avg CPU**: 103.7%
+- **Avg Memory**: 91.0MB (max 92.5MB)
 
 #### 100 Concurrent Users
-- **Throughput**: 49.52 RPS
+- **Throughput**: 69.79 RPS
 - **Error Rate**: 0.00%
-- **Avg Response Time**: 1.790s
-- **P95 Response Time**: 3.074s
-- **P99 Response Time**: 3.314s
-- **Avg CPU**: 101.8%
-- **Avg Memory**: 144.4MB (max 146.0MB)
+- **Avg Response Time**: 1.293s
+- **P95 Response Time**: 4.543s
+- **P99 Response Time**: 4.679s
+- **Avg CPU**: 94.1%
+- **Avg Memory**: 92.9MB (max 94.5MB)
 
 ## Analysis
 
@@ -318,4 +318,4 @@
 - **For Django Migration**: Django ASGI provides a good middle ground between Django WSGI and FastAPI
 
 ---
-*Report generated on: 2025-09-18 23:33:25*
+*Report generated on: 2025-09-22 00:03:56*
