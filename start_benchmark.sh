@@ -92,7 +92,7 @@ python3 -m venv venv
 ./venv/bin/pip install aiohttp matplotlib >/dev/null
 
 echo "🏃 Running incremental benchmark (10→200 users)..."
-./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --django-asgi-url http://localhost:18002 --fast-django-asgi-url http://localhost:18003 --max-concurrent 60 --step 10 --duration 8
+./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --django-asgi-url http://localhost:18002 --fast-django-asgi-url http://localhost:18003 --max-concurrent 200 --step 10 --duration 8
 
 echo "✅ Smoke benchmark complete. Starting full benchmark..."
 
