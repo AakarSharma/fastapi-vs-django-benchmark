@@ -1,6 +1,6 @@
-# FastAPI vs Django WSGI vs Django ASGI — Final Report
+# FastAPI vs Django WSGI vs Django ASGI vs fast-django-asgi — Final Report
 
-Date: 2025-09-18
+Date: 2025-09-22
 
 ## Overview
 - Goal: Compare throughput, latency, error rate, CPU, and memory across three backends with the same business logic and identical resource limits.
@@ -8,9 +8,10 @@ Date: 2025-09-18
   - FastAPI (ASGI, Tortoise ORM, uvloop)
   - Django WSGI (sync views, Django ORM)
   - Django ASGI (async views for I/O; Django ORM executed safely via thread offloading)
+  - fast-django-asgi (ASGI, Tortoise ORM, uvicorn/gunicorn)
 - Equalization:
   - Dockerized services, 1 CPU and ~2GB RAM per app
-  - One worker per app (gunicorn for WSGI, uvicorn for ASGI)
+  - One worker per app (gunicorn for WSGI; gunicorn+UvicornWorker for ASGI)
   - Same io-intensive workload (2x file I/O, 8x DB I/O), executed sequentially for parity
 - Database: MySQL (separate container). Migrations applied for all apps.
 
@@ -22,29 +23,25 @@ Date: 2025-09-18
   - FastAPI: `/io-intensive`
   - Django WSGI: `/api/benchmark/io_intensive/`
   - Django ASGI: `/api/benchmark/io_intensive/` (async function-based view)
+  - fast-django-asgi: `/api/benchmark/io_intensive/`
 
 ## Summary Results (Throughput and Error Rate)
 
-| Concurrency | FastAPI Thr (RPS) | Django WSGI Thr (RPS) | Django ASGI Thr (RPS) | FastAPI Err % | Django WSGI Err % | Django ASGI Err % |
-|-------------|-------------------|------------------------|-----------------------|---------------|-------------------|-------------------|
-| 10 | 270.79 | 72.90 | 49.16 | 0.04% | 0.00% | 0.00% |
-| 20 | 286.27 | 72.83 | 49.21 | 0.00% | 0.00% | 0.00% |
-| 30 | 296.99 | 72.48 | 49.61 | 0.00% | 0.00% | 0.00% |
-| 40 | 270.86 | 74.10 | 48.42 | 0.18% | 0.00% | 0.00% |
-| 50 | 289.15 | 74.12 | 49.58 | 0.00% | 0.00% | 0.00% |
-| 60 | 292.44 | 74.02 | 48.70 | 0.00% | 0.00% | 0.00% |
-| 70 | 281.42 | 73.83 | 48.79 | 0.00% | 0.00% | 0.00% |
-| 80 | 250.20 | 74.21 | 49.07 | 2.11% | 0.00% | 0.00% |
-| 90 | 280.89 | 74.00 | 49.49 | 0.00% | 0.00% | 0.00% |
-| 100 | 273.82 | 74.11 | 49.52 | 0.00% | 0.00% | 0.00% |
+| Concurrency | FastAPI Thr (RPS) | Django WSGI Thr (RPS) | Django ASGI Thr (RPS) | fast-django-asgi Thr (RPS) | FastAPI Err % | DJ WSGI Err % | DJ ASGI Err % | FD-ASGI Err % |
+|-------------|-------------------|------------------------|-----------------------|----------------------------|---------------|---------------|---------------|---------------|
+| 10 | 263.05 | 70.51 | 72.02 | 255.82 | 0.05% | 0.00% | 0.00% | 0.00% |
+| 20 | 287.19 | 70.77 | 76.53 | 298.08 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 30 | 298.32 | 70.83 | 80.64 | 254.68 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 40 | 260.16 | 70.00 | 81.01 | 311.85 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 50 | 267.44 | 70.88 | 80.61 | 267.19 | 0.99% | 0.00% | 0.00% | 0.00% |
+| 60 | 282.71 | 69.47 | 76.30 | 297.90 | 0.00% | 0.00% | 0.00% | 0.00% |
 
 Full per-level details (avg, P95, P99, CPU, memory) are in `results/incremental_benchmark_report.md` and `results/incremental_benchmark_results.json`.
 
 ## Key Findings
 - Throughput
-  - FastAPI consistently leads (~250–297 RPS typical), scaling best with concurrency.
-  - Django WSGI is stable around ~72–74 RPS across levels.
-  - Django ASGI is stable around ~49–50 RPS and does not surpass Django WSGI in this setup.
+  - FastAPI and fast-django-asgi are comparable on this workload, both ~250–312 RPS (1 worker).
+  - Django WSGI and Django ASGI cluster around ~70–81 RPS.
 - Latency
   - FastAPI has the lowest average and tail latencies; WSGI moderate; ASGI highest tails under load.
 - Errors

@@ -1,0 +1,12 @@
+fast-django-asgi
+fastapi==0.117.1
+uvicorn[standard]==0.36.0
+tortoise-orm[aiomysql]==0.20.0
+aiomysql==0.2.0
+pymysql[rsa]==1.1.0
+pydantic==2.11.9
+aiofiles==24.1.0
+uvloop==0.21.0
+tomlkit==0.13.2
+gunicorn==23.0.0
+

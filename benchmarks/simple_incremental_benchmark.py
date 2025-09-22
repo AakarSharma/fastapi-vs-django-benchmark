@@ -18,10 +18,11 @@ import re
 import random
 
 class SimpleIncrementalBenchmark:
-    def __init__(self, fastapi_url: str, django_url: str, django_asgi_url: str):
+    def __init__(self, fastapi_url: str, django_url: str, django_asgi_url: str, fast_django_asgi_url: str | None = None):
         self.fastapi_url = fastapi_url
         self.django_url = django_url
         self.django_asgi_url = django_asgi_url
+        self.fast_django_asgi_url = fast_django_asgi_url
         self.results = []
         # Container identifiers will be resolved dynamically via `docker compose ps -q`
 
@@ -167,6 +168,13 @@ class SimpleIncrementalBenchmark:
                 ("/api/products/", "GET", None),
                 ("/api/orders/", "GET", None),
             ]
+        elif framework == "fast-django-asgi":
+            endpoints = [
+                ("/api/benchmark/io_intensive/", "POST", {}),
+                ("/api/users/", "GET", None),
+                ("/api/products/", "GET", None),
+                ("/api/orders/", "GET", None),
+            ]
         else:  # fastapi
             endpoints = [
                 ("/io-intensive", "POST", {}),
@@ -181,6 +189,8 @@ class SimpleIncrementalBenchmark:
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             # Health check first
             if framework == "django" or framework == "django-asgi":
+                health_endpoint = "/api/benchmark/health/"
+            elif framework == "fast-django-asgi":
                 health_endpoint = "/api/benchmark/health/"
             else:  # fastapi
                 health_endpoint = "/health"
@@ -369,12 +379,25 @@ class SimpleIncrementalBenchmark:
             
             print("Waiting 15 seconds before next test...")
             await asyncio.sleep(15)
+
+            # Test fast-django-asgi if provided
+            if self.fast_django_asgi_url:
+                print("Waiting 10 seconds before testing Fast-Django ASGI...")
+                await asyncio.sleep(10)
+                fd_asgi_result = await self.run_load_test(self.fast_django_asgi_url, "fast-django-asgi", duration, concurrent)
+                if fd_asgi_result:
+                    self.results.append(fd_asgi_result)
             
             # Check if we should stop due to high error rates
             if fastapi_result and django_result and django_asgi_result:
-                if (fastapi_result["error_rate"] > 50 or 
-                    django_result["error_rate"] > 50 or 
-                    django_asgi_result["error_rate"] > 50):
+                high_error = (
+                    (fastapi_result["error_rate"] > 50) or
+                    (django_result["error_rate"] > 50) or
+                    (django_asgi_result["error_rate"] > 50)
+                )
+                if self.fast_django_asgi_url and 'fd_asgi_result' in locals():
+                    high_error = high_error or (fd_asgi_result and fd_asgi_result.get("error_rate", 0) > 50)
+                if high_error:
                     print(f"Stopping benchmark due to high error rates at {concurrent} concurrent users")
                     break
 
@@ -508,17 +531,18 @@ class SimpleIncrementalBenchmark:
         print(f"Report saved to {filename}")
 
 async def main():
-    parser = argparse.ArgumentParser(description='Simple Incremental FastAPI vs Django WSGI vs Django ASGI Benchmark')
+    parser = argparse.ArgumentParser(description='Simple Incremental FastAPI vs Django WSGI vs Django ASGI vs Fast-Django ASGI Benchmark')
     parser.add_argument('--fastapi-url', default='http://localhost:18000', help='FastAPI URL')
     parser.add_argument('--django-url', default='http://localhost:18001', help='Django WSGI URL')
     parser.add_argument('--django-asgi-url', default='http://localhost:18002', help='Django ASGI URL')
+    parser.add_argument('--fast-django-asgi-url', default=None, help='Fast-Django ASGI URL (optional)')
     parser.add_argument('--max-concurrent', type=int, default=1000, help='Maximum concurrent users')
     parser.add_argument('--step', type=int, default=50, help='Step size for concurrency')
     parser.add_argument('--duration', type=int, default=30, help='Duration per test in seconds')
     
     args = parser.parse_args()
     
-    benchmark = SimpleIncrementalBenchmark(args.fastapi_url, args.django_url, args.django_asgi_url)
+    benchmark = SimpleIncrementalBenchmark(args.fastapi_url, args.django_url, args.django_asgi_url, args.fast_django_asgi_url)
     
     try:
         await benchmark.run_incremental_benchmark(

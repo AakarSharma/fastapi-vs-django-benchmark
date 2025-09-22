@@ -22,7 +22,7 @@ docker-compose up --build -d
 
 # Wait for services to be ready
 echo "⏳ Waiting for services to start..."
-sleep 35
+sleep 45
 
 # Check if services are running
 echo "🔍 Checking service health..."
@@ -51,6 +51,14 @@ else
     exit 1
 fi
 
+# Check Fast-Django ASGI
+if curl -s http://localhost:18003/api/benchmark/health/ > /dev/null; then
+    echo "✅ Fast-Django ASGI is running on http://localhost:18003"
+else
+    echo "❌ Fast-Django ASGI is not responding"
+    # do not exit; it's optional
+fi
+
 # Apply Django WSGI migrations
 echo "🛠️ Applying Django WSGI migrations..."
 docker-compose exec -T django python manage.py migrate --noinput
@@ -61,6 +69,18 @@ docker-compose exec -T django-asgi python manage.py migrate --noinput
 
 # Initialize and upgrade FastAPI (Tortoise) migrations via Aerich
 echo "🧭 Running Aerich migrations for FastAPI..."
+# Initialize Aerich for fast-django-asgi and apply
+echo "🧭 Running Aerich migrations for Fast-Django ASGI..."
+docker-compose exec -T fast-django-asgi sh -lc '
+  set -e
+  if [ -f pyproject.toml ]; then
+    aerich init-db || true
+    aerich upgrade || true
+  else
+    aerich init -t aerich_cfg.TORTOISE_ORM
+    aerich init-db
+  fi
+'
 # If not initialized, init and init-db (creates initial migration and tables); otherwise upgrade
 docker-compose exec -T fastapi sh -lc 'if [ -f pyproject.toml ] && [ -d migrations ]; then aerich upgrade; else aerich init -t aerich_cfg.TORTOISE_ORM && aerich init-db; fi'
 
@@ -72,7 +92,7 @@ python3 -m venv venv
 ./venv/bin/pip install aiohttp matplotlib >/dev/null
 
 echo "🏃 Running incremental benchmark (10→200 users)..."
-./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --django-asgi-url http://localhost:18002 --max-concurrent 100 --step 10 --duration 10
+./venv/bin/python benchmarks/simple_incremental_benchmark.py --fastapi-url http://localhost:18000 --django-url http://localhost:18001 --django-asgi-url http://localhost:18002 --fast-django-asgi-url http://localhost:18003 --max-concurrent 60 --step 10 --duration 8
 
 echo "✅ Smoke benchmark complete. Starting full benchmark..."
 

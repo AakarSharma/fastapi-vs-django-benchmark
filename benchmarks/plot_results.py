@@ -14,21 +14,26 @@ with open(RESULTS_JSON) as f:
 fas = [r for r in data if r['framework'] == 'fastapi']
 djs = [r for r in data if r['framework'] == 'django']
 djs_asgi = [r for r in data if r['framework'] == 'django-asgi']
+fd_asgi = [r for r in data if r['framework'] == 'fast-django-asgi']
 
 # Sort by concurrency
 fas.sort(key=lambda r: r['concurrent_users'])
 djs.sort(key=lambda r: r['concurrent_users'])
 djs_asgi.sort(key=lambda r: r['concurrent_users'])
+fd_asgi.sort(key=lambda r: r['concurrent_users'])
 
 x_f = [r['concurrent_users'] for r in fas]
 x_d = [r['concurrent_users'] for r in djs]
 x_d_asgi = [r['concurrent_users'] for r in djs_asgi]
+x_fd_asgi = [r['concurrent_users'] for r in fd_asgi]
 
 # Throughput plot
 plt.figure(figsize=(10,6))
 plt.plot(x_f, [r['throughput'] for r in fas], marker='o', label='FastAPI', linewidth=2)
 plt.plot(x_d, [r['throughput'] for r in djs], marker='s', label='Django WSGI', linewidth=2)
 plt.plot(x_d_asgi, [r['throughput'] for r in djs_asgi], marker='^', label='Django ASGI', linewidth=2)
+if fd_asgi:
+    plt.plot(x_fd_asgi, [r['throughput'] for r in fd_asgi], marker='x', label='Fast-Django ASGI', linewidth=2)
 plt.title('Throughput vs Concurrency')
 plt.xlabel('Concurrent Users')
 plt.ylabel('Throughput (RPS)')
@@ -43,6 +48,8 @@ plt.figure(figsize=(10,6))
 plt.plot(x_f, [r['error_rate'] for r in fas], marker='o', label='FastAPI', linewidth=2)
 plt.plot(x_d, [r['error_rate'] for r in djs], marker='s', label='Django WSGI', linewidth=2)
 plt.plot(x_d_asgi, [r['error_rate'] for r in djs_asgi], marker='^', label='Django ASGI', linewidth=2)
+if fd_asgi:
+    plt.plot(x_fd_asgi, [r['error_rate'] for r in fd_asgi], marker='x', label='Fast-Django ASGI', linewidth=2)
 plt.title('Error Rate vs Concurrency')
 plt.xlabel('Concurrent Users')
 plt.ylabel('Error Rate (%)')
@@ -57,6 +64,8 @@ plt.figure(figsize=(10,6))
 plt.plot(x_f, [r['avg_cpu_percent'] for r in fas], marker='o', label='FastAPI', linewidth=2)
 plt.plot(x_d, [r['avg_cpu_percent'] for r in djs], marker='s', label='Django WSGI', linewidth=2)
 plt.plot(x_d_asgi, [r['avg_cpu_percent'] for r in djs_asgi], marker='^', label='Django ASGI', linewidth=2)
+if fd_asgi:
+    plt.plot(x_fd_asgi, [r['avg_cpu_percent'] for r in fd_asgi], marker='x', label='Fast-Django ASGI', linewidth=2)
 plt.title('CPU Usage vs Concurrency')
 plt.xlabel('Concurrent Users')
 plt.ylabel('Average CPU Usage (%)')
@@ -71,6 +80,8 @@ plt.figure(figsize=(10,6))
 plt.plot(x_f, [r['duration'] for r in fas], marker='o', label='FastAPI', linewidth=2)
 plt.plot(x_d, [r['duration'] for r in djs], marker='s', label='Django WSGI', linewidth=2)
 plt.plot(x_d_asgi, [r['duration'] for r in djs_asgi], marker='^', label='Django ASGI', linewidth=2)
+if fd_asgi:
+    plt.plot(x_fd_asgi, [r['duration'] for r in fd_asgi], marker='x', label='Fast-Django ASGI', linewidth=2)
 plt.title('Test Duration vs Concurrency')
 plt.xlabel('Concurrent Users')
 plt.ylabel('Duration (seconds)')
@@ -85,6 +96,8 @@ plt.figure(figsize=(10,6))
 plt.plot(x_f, [r['total_requests'] for r in fas], marker='o', label='FastAPI', linewidth=2)
 plt.plot(x_d, [r['total_requests'] for r in djs], marker='s', label='Django WSGI', linewidth=2)
 plt.plot(x_d_asgi, [r['total_requests'] for r in djs_asgi], marker='^', label='Django ASGI', linewidth=2)
+if fd_asgi:
+    plt.plot(x_fd_asgi, [r['total_requests'] for r in fd_asgi], marker='x', label='Fast-Django ASGI', linewidth=2)
 plt.title('Total Requests vs Concurrency')
 plt.xlabel('Concurrent Users')
 plt.ylabel('Total Requests')

@@ -78,8 +78,26 @@ services:
     mem_limit: 2g
     restart: unless-stopped
 
+  fast-django-asgi:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.fast-django-asgi
+    ports:
+      - "18003:8003"
+    volumes:
+      - ./fd_asgi_project:/app/fd_asgi_project
+      - fast_django_asgi_data:/app/data
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - mysql
+    cpus: 1.0
+    mem_limit: 2g
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   fastapi_data:
   django_data:
   django_asgi_data:
+  fast_django_asgi_data:

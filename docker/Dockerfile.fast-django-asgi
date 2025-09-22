@@ -1,0 +1,28 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements/fast_django_asgi_requirements.txt .
+RUN pip install --no-cache-dir -r fast_django_asgi_requirements.txt && python -c "import fast_django, fastapi" 
+
+# App code
+COPY fd_asgi_project/ ./fd_asgi_project
+WORKDIR /app/fd_asgi_project
+
+RUN mkdir -p /app/data
+
+EXPOSE 8003
+
+# Run migrations and start server
+ENV FD_DB_URL=mysql://benchmark_user:benchmark_pass@mysql:3306/benchmark_fast_django_asgi
+CMD ["gunicorn", "fd_asgi_project.asgi:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "--bind", "0.0.0.0:8003", "--timeout", "300", "--max-requests", "10000", "--max-requests-jitter", "1000", "--worker-connections", "2000", "--keep-alive", "60", "--backlog", "2048", "--preload"]
+
